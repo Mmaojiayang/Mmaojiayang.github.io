@@ -1,0 +1,1539 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<title>飞鸿留影</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
+<link rel="stylesheet" href="css/app.css">
+<!-- 引入bootstrap.css -->
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+<script src="js/jquery-3.2.0.min.js" charset="utf-8" type="text/javascript"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/echarts.min.js" charset="utf-8" type="text/javascript"></script>
+<script src="js/utils.js" charset="utf-8" type="text/javascript"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+<!-- 引入bootstrap.js -->
+<script src="js/bootstrap.min.js"></script>
+</head>
+
+
+<body>
+	<div class="video-container">
+		<video loop="loop" autoplay="autoplay" muted="false" preload="auto">
+			<source src="img/bg/bgvideo.mp4" type="video/mp4">
+		</video>
+	</div>
+    <div class="wpbox">
+        <div class="bnt">
+            <div class="topbnt_left fl">
+                <ul>
+                    <li  data-toggle="modal" data-target="#mybtn"><a href="#">识别</a></li>
+                    <li data-toggle="modal" data-target="#searchbtn"><a href="#">搜索</a></li>
+                </ul>
+                    
+                
+
+                <!-- 模态框实现提交表单 文件上传 -->
+                <div class="modal fade" tabindex="-1" role="dialog" id="mybtn">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content" style="background: rgba(1, 202, 217, .2)">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title" style="color: #fff;">对目标鸟类进行识别</h4>
+                        </div>
+						<form action="http://localhost:5000/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+						    <div class="modal-body" style="transition: height 0.5s ease;">
+						        <div class="form-group">
+						            <label for="timeInput" style="color: #fff;">时间</label>
+						            <input type="text" class="form-control" id="timeInput" placeholder="时间">
+						        </div>
+						        <div class="form-group">
+						            <label for="locationInput" style="color: #fff;">地点</label>
+						            <input type="text" class="form-control" id="locationInput" placeholder="地点">
+						        </div>
+						        <div class="form-group">
+						            <label for="fileInput" style="color: #fff;">上传图片</label>
+						            <input type="file" id="fileInput" style="color: #fff;" name="file" id="file">
+						            <div class="thumbnail-waper">
+						                <img class="img-thumbnail" src="" id="preview">
+						            </div>
+						        </div>
+						    </div>
+						    <div class="modal-footer" style="transition: height 0.5s ease;">
+								<span id="jieguotext"></span>
+						        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+						        <input class="btn btn-primary" type="submit" value="识别" name="submit">
+						        <div style="transform: ;">
+						            <img src="" style="width: 100%; margin-top: 2%;" id="jieguo">
+						        </div>
+						    </div>
+						</form>
+                      </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+				  
+				<script>
+				$(document).ready(function() {
+				    $('#uploadForm').submit(function(event) {
+				        event.preventDefault();
+				        $.ajax({
+				            url: 'http://8.137.159.72/',
+				            type: 'POST',
+				            data: new FormData($('#uploadForm')[0]),
+				            cache: false,
+				            contentType: false,
+				            processData: false,
+				            success: function(response) {
+				                $('#jieguotext').text('该鸟的品种为' + response.predicted_class);
+				                var fileInput = document.getElementById('fileInput');
+				                if (fileInput.files && fileInput.files[0]) {
+				                    var reader = new FileReader();
+				                    reader.onload = function(e) {
+				                        $('#jieguo').attr('src', e.target.result);
+				                    };
+				                    reader.readAsDataURL(fileInput.files[0]);
+				                }
+				            },
+				            error: function(xhr, status, error) {
+				                console.error(xhr.responseText);
+				            }
+				        });
+				    });
+				});
+
+				</script>
+
+				  
+				  
+
+                <!-- 模态框实现搜索功能 -->
+                <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" id="searchbtn">
+                    <div class="modal-dialog modal-lg" role="document">
+                      <div class="modal-content">
+                        <!-- 搜索模块 -->
+                <div class="search-form" style="color:black!important">
+                    <form action="">
+                        <div class="search-select">
+                            <select name="" id="" class="selectpicker">
+                                <option value="">全部</option>
+                                <option value="1">中国鸟类野外手册</option>
+                                <option value="2">国际鸟类分类体系</option>
+                            </select>
+                        </div>
+                        <div class="search-fields">
+                            <input type="text" class="" placeholder="请输入鸟类信息" autocomplete="off" value="" name="s" required="required" id="search_input">
+                            <button class="" type="button" id="search_btn" data-toggle="modal" ></button>
+                        </div>
+                    </form>
+                </div>
+
+                <script>
+                    //data-toggle="modal" data-target="#myModal01
+                    //当点击搜索按钮 取得表单框中的值 与鸟名进行比对 成功则给button添加自定义属性 可调鸟类信息的模态框
+                    $('#search_btn').on('click',function(){
+                        var info=$('#search_input').val();
+                        if(info=='苍鹭') {
+                            $(this).attr('data-target','');
+                            $(this).attr('data-target','#myModal01');
+                        }else if(info=='灰鹤') {
+                            $(this).attr('data-target','');
+                            $(this).attr('data-target','#myModal02');
+                        }else if(info=='东方白鹳') {
+                            $(this).attr('data-target','');
+                            $(this).attr('data-target','#myModal03');
+                        }else if(info=='白颊黑雁') {
+                            $(this).attr('data-target','');
+                            $(this).attr('data-target','#myModal04');
+                        }else if(info=='大天鹅') {
+                            $(this).attr('data-target','');
+                            $(this).attr('data-target','#myModal05');
+                        }else {
+                            alert('未查询到此类鸟');
+                        }
+                    })
+
+                      //回车键事件
+                      $(document).keypress(function(e) {
+                          if(e.which==13) {
+                              $('#search_btn').click();
+                          }
+                      })
+                </script>
+
+                      </div>
+                    </div>
+                  </div>
+
+
+
+            </div>
+            <div class=" fr topbnt_right">
+                <ul>
+                    <!-- <li><a>admin</a></li>
+                    <li class="active" id="togglevideo" data-toggle="modal" data-target="#changevideo"><a href="#">未开启监控</a></li> -->
+                    <li><a href="index.html">admin</a></li>
+                    <li class="toggleplay">
+                    <a href="#" class="toggleplaya">
+                        关闭
+                    </a>
+                    </li>
+                    <li class="active" id="togglevideo" data-toggle="modal" data-target="#changevideo"><a href="#">切换</a></li>
+                </ul>
+                <!-- 模态框 当点击切换摄像头时 -->
+                <div class="modal fade" tabindex="-1" role="dialog" id="changevideo">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title">摄像头</h4>
+                        </div>
+                        <div class="modal-body">
+                          未有更多摄像头
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addvideo">添加摄像头</button>
+                        </div>
+                      </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+
+                <!-- 模态框 当点击添加摄像头时 -->
+                <div class="modal fade" tabindex="-1" role="dialog" id="addvideo">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title">必需参数</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                  <label for="exampleInputEmail1">外形</label>
+                                  <input type="text" class="form-control" id="exampleInputEmail1" placeholder="外形">
+                                </div>
+                                <div class="form-group">
+                                  <label for="exampleInputPassword1">镜头焦距</label>
+                                  <input type="text" class="form-control" id="exampleInputPassword1" placeholder="镜头焦距">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">分辨率</label>
+                                    <input type="text" class="form-control" id="exampleInputPassword1" placeholder="分辨率">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">存储方式</label>
+                                    <input type="text" class="form-control" id="exampleInputPassword1" placeholder="存储方式">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">联网方式</label>
+                                    <input type="text" class="form-control" id="exampleInputPassword1" placeholder="联网方式">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">视频编码</label>
+                                    <input type="text" class="form-control" id="exampleInputPassword1" placeholder="视频编码">
+                                 </div>
+                                
+                              </form>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn btn-primary">保存</button>
+                        </div>
+                      </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+            </div>
+        </div>
+        <!-- bnt end -->
+        <div class="left1">
+            <div class="aleftboxttop">
+                <h2 class="tith2">设备情况</h2>
+                <div class="lefttoday_tit" style=" height:8%">
+                    <p class="fl"></p>
+                    <p class="fr"></p>
+                </div>
+                <div class="lefttoday_number">
+                    <div class="widget-inline-box text-center fl" id="repair" onMouseOver="javascript:showInform();"  onMouseOut="hiddenInform()">
+                        <p>&nbsp;&nbsp;总报修数</p>
+                        <h3 class="ceeb1fd">&nbsp;5</h3>
+                        <!-- <h4 class="text-muted pt6">占比<img src="img/iconup.png" height="16" />2%</h4> -->
+                    </div>
+
+
+                    <div class="widget-inline-box text-center fl"  data-toggle="modal" data-target='#method'>
+                        <p>&nbsp;&nbsp;已处理</p><br>
+                        <h3 class="c24c9ff">4</h3> 
+                        <!-- <h4 class="text-muted pt6">占比<img src="img/icondown.png" height="16" />3%</h4> -->
+                    </div>
+                    <div class="widget-inline-box text-center fl">
+                        <p>&nbsp;&nbsp;处理中</p><br>
+                        <h3 class="cffff00">1</h3>
+                        <!-- <h4 class="text-muted pt6">占比<img src="img/icondown.png" height="16" />3%</h4> -->
+                    </div>
+                    <div class="widget-inline-box text-center fl">
+                        <p>&nbsp;&nbsp;已逾期</p><br><br>
+                        <h3 class="c11e2dd">0</h3>
+                        <!-- <h4 class="text-muted pt6">占比<img src="img/icondown.png" height="16" />0%</h4> -->
+                    </div>
+                </div>
+
+                 <!-- 悬浮框 （故障）-->
+                 <div id="inform"  onMouseOver="javascript:showInform();"  onMouseOut="hiddenInform(event)">  
+                    <table id="informTable">  
+                       <tr>  
+                         <td>  
+                             出现的故障
+                             
+                         </td>  
+                       </tr>  
+                       <tr>  
+                         <td>  
+                            1号设备云台出现故障    
+                             <hr/>  
+                         </td>  
+                       </tr>  
+                       <tr>  
+                         <td>  
+                            2号设备图像清晰度不高    
+                             <hr/>  
+                         </td>  
+                       </tr>  
+                       <tr>  
+                         <td>  
+                            4号设备控制信息太弱  
+                             <hr/>  
+                         </td>  
+                       </tr>  
+                       <tr>  
+                         <td>  
+                            6号设备图像对比度较小，图像淡  
+                             <hr/>  
+                         </td>  
+                       </tr>  
+                       <tr>  
+                         <td>  
+                            8号设备监控操作不灵敏  
+                             <hr/>  
+                         </td>  
+                       </tr>  
+                    </table>  
+                 </div>  
+
+                 <div class="modal fade" tabindex="-1" role="dialog" id="method" style="color: #000;">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content" style="background: rgba(1, 202, 217, .5);color: white;">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                          <h4 class="modal-title">解决办法</h4>
+                        </div>
+                        <div class="modal-body" >
+                            <form>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">无图像输出？</label>
+                                    <div>检查电源是否接好，电源电压是否足够；检查接头或视频电缆是否接触不良；
+            
+                                    </div>
+            
+                                </div>
+                                <div class="form-group">
+                                  <label for="exampleInputPassword1">图像质量不好？</label>
+                                 <div>检查镜头是否有指纹或者污渍；检查光圈是否调好；检查视频电缆是否接触良好；
+                                     传输距离是否太远；电压电流是否正常;检查附近是否有干扰源
+                                 </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">摄像头线路故障？</label>
+                                    <div>
+                                        首先检查摄像头的供电是否正常，查看摄像头电源指示灯是否亮起，或者用手挡住摄像头的光敏电阻
+                                        看红外夜视灯是否亮起，不亮则可能是电源或线路问题。
+                                        万用表测试摄像头电源的电压、电流时，普通摄像头一般为12V 2A左右，断电状态下测试线路是否有短路、断路现象
+            
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">摄像头网络故障？</label>
+                                    <div>
+                                        网络丢包检测，有时线路检测是正常的，连接摄像头后却出现不在线或没有任何画面。这是可用电脑的ping命令测试
+                                        网络的丢包率和延时率
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exampleInputPassword1">监控系统的维护、保养</label>
+                                    <div>
+                                        通电前，检查内部是否有松动现象；检查各插卡是否有歪斜而接触不良的现象；
+                                        接口匹配不好的提前更换
+                                    </div>
+                                </div>
+                              </form>
+                        </div>
+                      </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+
+              <script type="text/javascript">  
+                    //显示悬浮层  
+                    function showInform(){  
+                      document.getElementById("inform").style.display='block';  
+                       // document.getElementById("inform").css("display","block");  
+                    }  
+                    //隐藏悬浮层  
+                    function hiddenInform(event){  
+                       var informDiv = document.getElementById('inform');  
+                       var x=event.clientX;    
+                       var y=event.clientY;    
+                       var divx1 = informDiv.offsetLeft;    
+                       var divy1 = informDiv.offsetTop;    
+                       var divx2 = informDiv.offsetLeft + informDiv.offsetWidth;    
+                       var divy2 = informDiv.offsetTop + informDiv.offsetHeight;  
+                       if( x < divx1 || x > divx2 || y < divy1 || y > divy2){    
+                            document.getElementById('inform').style.display='none';    
+                       }    
+                        
+                    }  
+                
+                
+              </script>  
+
+                <!-- lefttoday_number end -->
+            </div>
+            <div class="aleftboxtmidd">
+                <h2 class="tith2">运行设备</h2>
+                <div class="lefttoday_tit height ht">
+                    <p class="fl"></p>
+                    <p class="fr"></p>
+                </div>
+                <div id="aleftboxtmidd" class="aleftboxtmiddcont"></div>
+            </div>
+            <div class="aleftboxtbott">
+                <h2 class="tith2">近一个月</h2>
+                <div class="lefttoday_tit height">
+                    <p class="fl"></p>
+                    <p class="fr"></p>
+                </div>
+                <div id="aleftboxtbott" class="aleftboxtbott_cont"></div>
+            </div>
+        </div>
+        <!--  left1 end -->
+        <div class="mrbox">
+            <div class="mrbox_topmidd" style="width: 69%;">
+                <div class="amiddboxttop">
+                    <h2 class="tith2 pt1" style="font-size: 1.8rem;" id="checkvideo">监控设备1</h2>
+                    <div class="amiddboxttop_map" style="">
+                        <!-- 未登录不显示监控内容 只留一张图片 -->
+                        <video src="./video/bird.mp4"  loop="loop" autoplay="autoplay" muted="false" preload="auto" id="bird_video"></video>
+                        <!-- 准备一张图片 当关闭摄像时用户替换 -->
+                        <img src="./img/bg/bgggg.png" alt="" style="width: 98%; height: 100%;display: none;" id="bird_img">
+                        <script>
+                            var num=0;
+                            $('.toggleplay').on('click',function(){
+                                num++;
+                                if(num%2!==1) {
+                                    $('.toggleplaya').html('打开')
+                                    $('#bird_video').fadeOut();
+                                    $('#bird_img').fadeIn();
+                                }else {
+                                    $('.toggleplaya').html('关闭')
+                                    $('#bird_video').fadeIn();
+                                    $('#bird_img').fadeOut();
+                                }
+                               
+                            })
+                            
+
+                            //点击切换摄像 则换一个视频
+                            // $('#addvideo').on('click',function(){
+                            //     alert('请先登录');
+                            // })
+                        </script>
+                    </div>
+                </div>
+                <!--  amiddboxttop end-->
+                <div class="amidd_bott">
+                    <div id="main" style="width: 800px;height:100%;"></div>
+
+
+                </div>
+                <!-- amidd_bott end -->
+            </div>
+            <!-- mrbox_top end -->
+            <div class="mrbox_top_right">
+                <div class="arightboxtop">
+                    <h2 class="tith2" style="padding-top: 4%;">历史记录</h2>
+                    
+                    <div class="zhtc_table_title" style="color: #fff;">
+                        <div>名称</div>
+                       
+                        <div>鸟流量</div>
+                        
+                        <div>概述图</div>
+                      
+                    </div>
+                    <div id="zhtc_table" class="left2_table" style="max-height: 380px;overflow: auto;">
+                        <ul>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal01">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">苍鹭</div>
+                                        <div class="zhtc_table_li_content_fontdiv">20</div>
+                                        <div><img width="80" height="53" src="bird_img/canglu.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="bg">
+                                <a href="#" data-toggle="modal" data-target="#myModal02">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">灰鹤</div>
+                                        <div class="zhtc_table_li_content_fontdiv">10</div>
+                                        <div><img width="80" height="53" src="bird_img/huihe.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal03">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">东方白鹳</div>
+                                        <div class="zhtc_table_li_content_fontdiv">12</div>
+                                        <div><img width="80" height="53" src="bird_img/baiguan.jpg" /></div>
+                                    </div>
+                                </a>
+                                
+                            </li>
+                            <li class="bg">
+                                <a href="#" data-toggle="modal" data-target="#myModal04">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">白颊黑雁</div>
+                                        <div class="zhtc_table_li_content_fontdiv">4</div>
+                                        <div><img width="80" height="53" src="./bird_img/baijia.webp" /></div>
+                                        
+                                    </div>
+                                </a>
+                            </li>
+                            <li> 
+                                <a href="#" data-toggle="modal" data-target="#myModal05">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">大天鹅</div>
+                                        <div class="zhtc_table_li_content_fontdiv">18</div>
+                                        <div><img width="80" height="53" src="bird_img/datiane.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="bg">
+                                <a href="#" data-toggle="modal" data-target="#myModal06">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">赤麻鸭</div>
+                                        <div class="zhtc_table_li_content_fontdiv">8</div>
+                                        <div><img width="80" height="53" src="bird_img/cmy.jpg" /></div>
+                                    </div>
+                                </a>
+                                 
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal07">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">八哥</div>
+                                        <div class="zhtc_table_li_content_fontdiv">17</div>
+                                        <div><img width="80" height="53" src="bird_img/bage.webp" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal08">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">喜鹊</div>
+                                        <div class="zhtc_table_li_content_fontdiv">11</div>
+                                        <div><img width="80" height="53" src="bird_img/xique.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal09">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">灰头麦鸡</div>
+                                        <div class="zhtc_table_li_content_fontdiv">18</div>
+                                        <div><img width="80" height="53" src="bird_img/htmj.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal10">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">环颈鸻</div>
+                                        <div class="zhtc_table_li_content_fontdiv">16</div>
+                                        <div><img width="80" height="53" src="bird_img/hjz.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal11">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">蒙古沙鸻</div>
+                                        <div class="zhtc_table_li_content_fontdiv">9</div>
+                                        <div><img width="80" height="53" src="bird_img/mgsj.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="modal" data-target="#myModal12">
+                                    <div class="zhtc_table_li_content">
+                                        <div class="zhtc_table_li_content_fontdiv">鸳鸯</div>
+                                        <div class="zhtc_table_li_content_fontdiv">14</div>
+                                        <div><img width="80" height="53" src="bird_img/yy.jpg" /></div>
+                                    </div>
+                                </a>
+                            </li>
+                           
+
+                            <!-- 模态框实现查看鸟类功能 -->
+                            <!-- 模态框 （苍鹭）-->
+        <div class="modal fade" tabindex="-1" role="dialog" id="myModal01">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >苍鹭 （鸟纲鹭科鹭属的涉禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                苍鹭雄鸟头顶中央和颈白色，头顶两侧和枕部黑色。羽冠为4根细长的羽毛形成，分为两条位于头顶和枕部两侧，
+                                状若辫子，颜色为黑色，前颈中部有2-3列纵行黑斑。上体自背至尾上覆羽苍灰色，尾羽暗灰色，两肩有长尖而下垂的苍灰色羽毛，
+                                羽端分散，呈白色或近白色。初级飞羽、初级覆羽，外侧次级飞羽黑灰色，内侧次级飞羽灰色，大覆羽外侧浅灰色，内侧灰色；中覆羽、小覆羽浅灰色，
+                                三级飞羽暗灰色，亦具长尖而下垂的羽毛。颏、喉白色，颈的基部有呈披针形的灰白色长羽披散在胸前。胸、腹白色；前胸两侧各有一块大的紫黑色斑，沿胸、腹两侧向后延伸，在肛周处汇合。两胁微缀苍灰色。腋羽及翼下覆羽灰色，腿部羽毛白色。
+                                虹膜黄色，眼先裸露部分黄绿色，嘴黄色，跗蹠和趾黄褐色或深棕色，爪黑色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于江河、溪流、湖泊、水塘、海岸等水域岸边及其浅水处，也见于沼泽、稻田、山地、森林和平原荒漠上的水边浅水处和沼泽地上
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                分布于非洲、马达加斯加、欧亚大陆，从英伦三岛往东到远东海岸和萨哈林岛和日本，往南到朝鲜、蒙古、伊拉克、伊朗、印度、中国和中南半岛一些国家。
+
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                成对和成小群活动，迁徙期间和冬季集成大群，有时亦与白鹭混群。常单独的涉水于水边浅水处，或长时间的在水边站立不动，颈常曲缩于两肩之间，并常以一脚站立，另一脚缩于腹下，站立可达数小时之久而不动。飞行时两翼鼓动缓慢，颈缩成‘Z’字形，
+                                两脚向后伸直，远远的拖于尾后。晚上多成群栖息于高大的树上休息。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/1/ 9:50:46</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/canglu01.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+          <!-- 模态框 （灰鹤）-->
+        <div class="modal fade" tabindex="-1" role="dialog" id="myModal02">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">灰鹤 （鸟纲鹤科鹤属的涉禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                灰鹤是大型涉禽，后趾小而高位，不能与前三趾对握，因此不能栖息在树上。成鸟两性相似，雌鹤略小。全身大都灰色，头顶裸出部朱红色，
+                                并具稀疏的黑色发状短羽；眼先、枕、颊、喉，前颈和后颈灰黑色；眼后方，耳羽和颈侧灰白色，并在后颈汇合，形成倒人字状；初级飞羽、
+                                次级飞羽黑褐色，三级飞羽灰色，仅羽端略成黑色，延长弯曲成弓状，羽枝分离呈毛发状。尾灰色，羽端近黑色，其余体羽灰色。雌雄羽色相似。
+                                虹膜赤褐色或黄褐色，嘴青灰色，先端略淡，呈乳黄色，胫裸出部、跗蹠和趾灰黑色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于开阔平原、草地、沼泽、河滩、旷野、湖泊以及农田地带；其中尤为喜欢以富有水边植物的开阔湖泊和沼泽地带。
+                                在各类湿地浅滩繁殖，包括沼泽和草甸，尤喜多水生植物的开阔湖泊和芦苇沼泽。迁徙及越冬时主要栖息在河流、湖泊、水库或海岸附近常到开阔的农田或休耕地中觅食。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                繁殖范围横贯欧亚大陆和非洲大陆，从北欧和西欧，到蒙古北部、中国北部和西伯利亚东部均有分布；冬季的分布范围包括
+                                法国和伊比利亚半岛的部分地区、第勒尼安海和地中海沿岸地区、北非和东非、中东、印度以及中国的南部和东部。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                繁殖期成对或成5~10只的家庭小群活动，迁徙期可集群多达40~50只，在越冬地可集多达数百只的大群，飞行时呈“V”字形编队。性机警，胆小怕人，
+                                鹤群活动和觅食时常有一只鹤负责警戒。能在陆地和水中寻找食物
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/1/ 9:49:40</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/huihe01.jpg" id="preview">
+                            </div>
+                        </div>
+                        
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+          <!-- 模态框 （东方白鹳 ）-->
+        <div class="modal fade" tabindex="-1" role="dialog" id="myModal03">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">东方白鹳  （鸟纲鹳科鹳属的涉禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                东方白鹳是一种大型的涉禽，体态优美。长而粗壮的嘴十分坚硬，呈黑色，仅基部缀有淡紫色或深红色。嘴的基部较厚，往尖端逐渐变细，
+                                并且略微向上翘。眼睛周围、眼线和喉部的裸露皮肤都是朱红色，眼睛内的虹膜为粉红色，外圈为黑色。身体上的羽毛主要为纯白色。
+                                翅膀宽而长，上面的大覆羽、初级覆羽、初级飞羽和次级飞羽均为黑色，并具有绿色或紫色的光泽。初级飞羽的基部为白色，
+                                内侧初级飞羽和次级飞羽的外除羽缘和羽尖外，均为银灰色，向内逐渐转为黑色。前颈的下部有呈披针形的长羽，在求偶炫耀的时候能竖直起来。
+                                腿、脚甚长，为鲜红色
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                繁殖期主要栖息于开阔而偏僻的平原、草地和沼泽地带，特别是有稀疏树木生长的河流、湖泊、水塘，以及水渠岸边和沼泽地上，
+                                有时也栖息和活动在远离的居民区，具有岸边树木的水稻田地带。越冬地主要集中在长江中下游的湿地湖泊
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                俄罗斯的东南部，以及中国的东北地区。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                除了在繁殖期成对活动外，其他季节大多组成群体活动，特别是迁徙季节，常常聚集成数十只，甚至上百只的大群。
+                                觅食时常成对或成小群漫步在水边或草地与沼泽地上，步履轻盈骄健，边走边啄食。性情机警而胆怯，常常避开人群。
+                                如果发现有入侵领地者，就会通过用上下嘴急速啪打，发出“嗒嗒嗒”的嘴响声，并且伴随着颈部伸直向上，头仰向后，
+                                再伸向下，左右摆动，两翅半张和尾羽向上竖起，两脚不停的走动等动作，表现出一系列特有的恐吓行为。
+                                繁殖期觅食活动的范围大约在500米左右，在食物缺乏时也常飞到1-2公里左右，甚至5-6公里以外的地方去觅食。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/1/ 9:49:21</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/dfbg01.jpg" id="preview">
+                            </div>
+                        </div>
+                       
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+        
+           <!-- 模态框 （白额黑雁）-->
+           <div class="modal fade" tabindex="-1" role="dialog" id="myModal04">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">白颊黑雁 （鸟纲鸭科黑雁属的水禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                白颊黑雁身长58-70厘米，翼展132-145厘米，体重1400-2400克，寿命19年。羽色为漂亮的灰、白、黑色，背部色灰，面有白斑，是一种很容易识别的黑雁，
+                                颈部和胸部黑色，小脑袋纯白色，有灰色条纹环绕并与非常苍白的下体形成对比。腿和臀部是黑白双色相杂，嘴黑色并在眼睛前形成一块明显的小三角。
+                                羽毛致密；嘴多扁平，先端具嘴甲；前趾间具蹼，后趾形小而不踏地；雌雄外形不同，雄性具交接器；尾脂腺发达；气管基部有膨大的骨质囊。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于海湾、海港及河口等地，繁殖期的生境主要是由苔藓和地衣复盖的冻原或灌木冻原地带，特别是在苔原上地势较高而又比较干燥的地方，
+                                或水域附近有稀疏灌木生长的苔原地带。冬季大多出现在有耐碱植物生长的湖泊和水库周围地区，也出现在周围地势低洼的咸水湖和沿海地区，
+                                偶尔还出现在农田地里。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                分布于比利时、丹麦、爱沙尼亚、法罗群岛、芬兰、法国、德国、格陵兰岛、冰岛、爱尔兰、拉脱维亚、荷兰、挪威、波兰、俄罗斯联邦、斯瓦尔巴特和扬马延岛、瑞典、英国。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1" >生活习性</label>
+                            <div class="thumbnail-waper">
+                                善于游泳和潜水，飞翔的速度也很快，飞行速度：每小时60至80公里。从水面上飞起时，也总是在不停地鸣叫。晚上一般栖息在水面上、水边浅水处或者沙滩上。
+                                每天黎明就成群结队地飞到草原上去觅食，中午又回到水边去休息、饮水和吞食沙粒，晚上有时也在觅食地栖息。当气候较为恶劣，特别是有暴风雨侵袭的天气下，
+                                也常到芦苇丛中躲避。在水面上汇集成密集的群体。主要以青草或水生植物的嫩芽、叶、茎等为食，也吃根和植物种子，冬季有时还吃麦苗等农作物的幼苗，常成群觅食。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/3/31/ 9:49:40</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/bjhq01.jpg" id="preview">
+                            </div>
+                        </div>
+                       
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+             <!-- 模态框 （大天鹅 ）-->
+        <div class="modal fade" tabindex="-1" role="dialog" id="myModal05">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">大天鹅  （鸟纲鸭科天鹅属的游禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                    
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                大天鹅全身的羽毛均为雪白的颜色，雌雄同色，雌略较雄小，全身洁白，仅头稍沾棕黄色。虹膜暗褐色，嘴黑色，上嘴基部黄色，
+                                此黄斑沿两侧向前延伸至鼻孔之下，形成一喇叭形。嘴端黑色。跗蹠、蹼、爪亦为黑色。幼鸟全身灰褐色，头和颈部较暗，下体、
+                                尾和飞羽较淡，嘴基部粉红色，嘴端黑色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                在繁殖期喜欢栖息在开阔的、食物丰富的浅水水域中，如富有水生植物的湖泊、水塘和流速缓慢的河流，特别是在针叶林带，
+                                最喜桦树林带和无林的高原湖泊与水塘，冬季则主要栖息在多草的大型湖泊、水库、水塘、河流、海滩和开阔的农田地带。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                繁殖范围横贯欧亚大陆和非洲大陆，从北欧和西欧，到蒙古北部、中国北部和西伯利亚东部均有分布；冬季的分布范围包括
+                                法国和伊比利亚半岛的部分地区、第勒尼安海和地中海沿岸地区、北非和东非、中东、印度以及中国的南部和东部。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                性喜集群，除繁殖期外常成群生活，特别是冬季，常呈家族群活动，有时也多至数十至数百只的大群栖息在一起。性胆小，警惕性极高，
+                                活动和栖息时远离岸边，游泳亦多在开阔的水域。善游泳，一般不潜水。游泳时颈向上伸直，与水面成垂直姿势。游泳缓慢从容，姿势优美。
+                                主要以水生植物叶、茎、种子和根茎为食，如莲藕、胡颓子和水草。嘴的掘食能力很强，它甚至能挖掘埋藏于淤泥下0.5米处的食物。冬季有时
+                                也到农田觅食谷物和幼苗。除植物性食物外，也吃少量动物性食物，如软体动物、水生昆虫和其他水生无脊椎动物。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/3/28/ 9:49:43</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/dte02.jpg" id="preview">
+                            </div>
+                        </div>
+                      
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+          <!-- 模态框（赤麻鸭） -->
+          <div class="modal fade" tabindex="-1" role="dialog" id="myModal06">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >赤麻鸭 （鸟纲鸭科麻鸭属的游禽）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                赤麻鸭雄鸟头顶棕白色；颊、喉、前颈及颈侧淡棕黄色；下颈基部在繁殖季节有一窄的黑色领环；胸、上背及两肩均赤黄褐色；
+                                下背稍淡；腰羽棕褐色，具暗褐色虫蠹状斑；尾和尾上覆羽黑色；翅上覆羽白色，微沾棕色；小翼羽及初级飞羽黑褐色，次级
+                                飞羽外翈辉绿色，形成鲜明的绿色翼镜，三级飞羽外侧3枚外翈棕褐色；下体棕黄褐色，其中以上胸和下腹以及尾下覆羽最深；
+                                腋羽和翼下覆羽白色。雌鸟羽色和雄鸟相似，但体色稍淡，头顶和头侧几乎白色，颈基无黑色领环。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于江河、湖泊、河口、水塘及其附近的草原、荒地、沼泽、沙滩、农田和平原疏林等各类生境中，尤喜平原上的湖泊地带。
+                                主要在内陆淡水生活，有时也见于海边沙滩和咸水湖区及远离水域的开阔草原上。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                欧洲东南部、地中海沿岸、非洲西北部、亚洲中部和东部，越冬在日本、朝鲜半岛、中南半岛、印度、缅甸、泰国和非洲尼罗河流域等地。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                繁殖期成对生活，非繁殖期以家族群和小群生活，有时也集成数十、甚至近百只的大群。性机警，人难于接近。
+                                。每年3月初至3月中旬当繁殖地的冰雪刚开始融化时就成群从越冬地迁来，10月末至11月初又成群从繁殖地迁往越冬地，多成家族群或由家族群集成更大的群体迁飞。
+                                主要以水生植物叶、芽、种子、农作物幼苗、谷物等植物性食物为食，也吃昆虫、甲壳动物、软体动物、虾、水蛙、蚯蚓、小蛙和小鱼等动物性食物。觅食多在黄昏和清晨，有时白天也觅食。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/3/31/ 19:55:46</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/cmy02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+           <!-- 模态框（八哥） -->
+           <div class="modal fade" tabindex="-1" role="dialog" id="myModal07">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >八哥 （鸟纲椋鸟科八哥属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                八哥通体乌黑色，矛状额羽延长成簇状耸立于嘴基，形如冠状，头顶至后颈、头侧、颊和耳羽呈矛状、绒黑色具蓝绿色金属光泽，其余上体缀有淡紫褐色，
+                                不如头部黑而辉亮。两翅与背同色，初级覆羽先端和初级飞羽基部白色，形成宽阔的白色翅斑，飞翔时尤为明显。尾羽绒黑色，除中央一对尾羽外，均具
+                                白色端斑。下体暗灰黑色，肛周和尾下覆羽具白色端斑。 虹膜橙黄色，嘴乳黄色，脚黄色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                主要栖息于海拔2000米以下的低山丘陵和山脚平原地带的次生阔叶林、竹林和林缘疏林中，也栖息于农田、牧场、果园和村寨附近的大树上，
+                                有时还栖息于屋脊上或田间地头。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                原产地：中国、老挝人民民主共和国、缅甸、越南。引进：阿根廷、文莱达鲁萨兰国、日本、马来西亚、菲律宾、新加坡。中国分布于四川、
+                                云南以东，河南和陕西以南的平原地区，东南沿海台湾、香港和海南岛一带。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                性喜结群，常立水牛背上，或集结于大树上，或成行站在屋脊上，每至暮时常呈大群翔舞空中，噪鸣片刻后栖息。夜宿于竹林、大树或芦苇丛，
+                                并与其他椋鸟混群栖息。野生八哥食性杂，主要以蝗虫、蚱蜢、金龟子、蛇、毛虫、地老虎、蝇、虱等昆虫和昆虫幼虫为食，也吃谷粒、植物果实和种子等植物性食物。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/2/ 8:55:46</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/bage02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+           <!-- 模态框（喜鹊） -->
+           <div class="modal fade" tabindex="-1" role="dialog" id="myModal08">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >喜鹊 （鸟纲鸦科鹊属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                雄性成鸟：头、颈、背和尾上覆羽辉黑色，后头及后颈稍沾紫，背部稍沾蓝绿色；肩羽纯白色；腰灰色和白色相杂状。翅黑色，初级飞羽内翈具大形白斑，
+                                外翈及羽端黑色沾蓝绿光泽；次级飞羽黑色具深蓝色光泽。尾羽黑色，具深绿色光泽、末端具紫红色和深蓝绿色宽带。
+                                雌性成鸟：与雄鸟体色基本相似，但光泽不如雄鸟显著，下体黑色有呈乌黑或乌褐色，白色部分有时沾灰。幼鸟：形态似雌鸟但体黑色部分呈褐色或黑褐色；白色部分为污白色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                喜鹊是适应能力比较强的鸟类，在山区、平原都有栖息，无论是荒野、农田、郊区、城市、公园和花园都能看到它们的身影。栖息地多样，常出没于人类活动地区，喜欢将巢筑在民宅旁的大树上。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                喜鹊分布范围很广、除南极洲、非洲、南美洲与大洋洲外、几乎遍布世界各大陆。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                除繁殖期间成对活动外，常成3-5只的小群活动，秋冬季节常集成数十只的大群。白天常到农田等开阔地区觅食，傍晚飞至附近高大的树上休息，有时亦见与乌鸦、寒鸦混群活动。
+                                飞翔能力较强，且持久，飞行时整个身体和尾成一直线，尾巴稍微张开，两翅缓慢地鼓动着，雌雄鸟常保持一定距离，在地上活动时则以跳跃式前进。鸣声单调、响亮。
+                                食性较杂，食物组成随季节和环境而变化，夏季主要以昆虫等动物性食物为食，其他季节则主要以植物果实和种子为食。
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/8/ 13:55:46</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/xique02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+           <!-- 模态框（环颈鸻） -->
+           <div class="modal fade" tabindex="-1" role="dialog" id="myModal10">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >环颈鸻 （鸟纲鸻科鸻属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                雄性成鸟（繁殖羽）：额前和眉纹白色；头顶前部具黑色斑，且不与穿眼黑褐纹相连。头顶后部、枕部至后颈沙棕色或灰褐色。后颈具一条白色领圈。上体余部，
+                                包括背、肩、翅上覆羽、腰、尾上覆羽灰褐色，腰的两侧白色。飞羽黑褐色，羽干白色。
+                                雌性成鸟（繁殖羽）：缺少黑色，在雄性是黑色的部分，在雌性则被灰褐色或褐色所取代。
+                                非繁殖羽（冬羽）：同繁殖期的雌性成鸟一样暗淡，头部缺少黑色和棕色，胸侧的块斑为浅淡的灰褐色，面积明显缩小。虹膜暗褐；嘴纤细，黑色。跗蹠稍黑，有时为淡褐色或者黄褐色。爪黑褐色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于河岸沙滩、沼泽草地上，通常单独、或者3-5只集群活动于海边潮间带、河口三角洲、泥地、盐田、沿海沼泽和水田；在内陆的河岸沙滩、沼泽草地、湖滨、盐碱滩和近水的荒地中亦比较常见。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                分布于欧洲、亚洲、非洲和美洲等许多国家。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                迁徙期集群活动，有时与其他小型鸻鹬类结群觅食。在集小群觅食时，环颈鸻的啄食频次显著大于不集群的时候。在南方一些地方并不迁离，而是游荡。
+                                环颈鸻具有很强的返回繁殖地或越冬地的能力。以蠕虫、昆虫、软体动物为食，兼食植物种子、植物碎片，觅食小型甲壳类、软体动物、昆虫、蠕虫等，也食植物的种子和叶片
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/5/ 13:50:46</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/hjz02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+           <!-- 模态框（蒙古沙鸻） -->
+           <div class="modal fade" tabindex="-1" role="dialog" id="myModal11">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >蒙古沙鸻 （鸟纲鸻科鸻属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                蒙古沙鸻夏羽头顶部灰褐沾棕，额部颜色为白色、黑色或仅具白斑。头顶前部具一黑色横带，连于两眼之间。将白色额部和头顶分开。
+                                眼先、贯眼纹和耳羽黑色，其上后方有一白色眉斑，后颈棕红色，向两侧延伸至上胸与胸部棕红色相连，形成一完整的棕红色颈环，背和其余上体灰褐色或沙褐色。
+                                翅覆羽和内侧飞羽同背。翅上大覆羽具白色羽端，次级飞羽基部以及内侧初级飞羽外部白色，其余初级飞羽具白色羽轴，在翅上形成明显的白色翅斑。腰两侧白色，
+                                尾灰褐色，外侧两对尾羽外硼白色；其余尾羽具黑褐色亚端斑和窄的白色尖端。虹膜黑褐色，嘴黑色，脚暗灰绿色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于海边沙滩、河口三角洲、水田、盐田，繁殖季节见于内陆高原的河流、沼泽、湖泊附近的耕地、沙滩、戈壁和草原等。垂直分布高度从海平面至青藏高原（海拔5500米以上）。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                分布于欧洲、亚洲和美洲等许多国家。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                栖息于沿海海岸、沙滩、河口、湖泊、河流等水域岸边，以及附近沼泽、草地和农田地带，也出现于荒漠、半荒漠和高山地带的水域岸边及其沼泽地上，有时也到离水域较远的草原和
+                                田野活动和觅食。常单独活动，有时也见成对或成小群活动，特别是冬季常集成大群。性较大胆，常在水边沙滩上走走停停，边走边觅食。
+                                主要取食昆虫、软体动物、蠕虫、蝼蛄、蚱蜢、螺等小型动物。也取食蠕虫、蚱蜢、蝼蛄、黑小蜂及鞘翅目昆虫。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/5/ 13:45:20</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/mgsj02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+          <!-- 模态框（鸳鸯） -->
+          <div class="modal fade" tabindex="-1" role="dialog" id="myModal12">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >鸳鸯 （鸟纲鸭科鸳鸯属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                鸳鸯是小型游禽，雄鸟额和头顶中央翠绿色，并具金属光泽；枕部铜赤色，与后颈的暗紫绿色长羽组成羽冠。眉纹白色，宽而且长，并向后延伸构成羽冠的一部分。
+                                眼先淡黄色，颊部具棕栗色斑，眼上方和耳羽棕白色，颈侧具长矛形的辉栗色领羽。背、腰暗褐色，并具铜绿色金属光泽；内侧肩羽紫色，外侧数枚纯白色，
+                                并具绒黑色边；翅上覆羽与背同色。初级飞羽暗褐色，外翈具银白色羽缘，内翈先端具铜绿色光泽；次级飞羽褐色，具白色羽端，内侧数枚外翈呈金属绿色；
+                                三级飞羽黑褐色，外翈亦呈金属绿色，与内侧次级飞羽外翈上的绿色共同组成蓝绿色翼镜，最后一枚三级飞羽外翈为金属绿色。
+                                虹膜褐色，嘴雄鸟暗角红色，尖端白色。雌鸟褐色至粉红色，嘴基白色，脚橙黄色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                繁殖期主要栖息于山地森林河流、湖泊、水塘、芦苇沼泽和稻田地中，冬季多栖息于大的开阔湖泊、江河和沼泽地带。一般生活在针叶和阔叶混交林及附近的溪流、沼泽、芦苇塘和湖泊等处
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                原产地：中国、日本、韩国、朝鲜民主主义人民共和国、俄罗斯联邦。引进：奥地利、比利时、丹麦、法国、德国、荷兰、斯洛文尼亚、瑞士和英国。
+                                旅鸟：白俄罗斯、印度、蒙古、缅甸、尼泊尔、西班牙、泰国和越南。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                常成群到达繁殖地，刚迁到繁殖地时活动在低山开阔地带的水塘和溪流中，休息时则成群栖息在水边或未融化的冰上。
+                                善游泳和潜水，在地上行走也很好，除在水上活动外，也常到陆地上活动和觅食。鸳鸯生性机警，极善隐蔽，飞行的本领也很强
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/7/ 10:42:20</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/yy02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+          <!-- 模态框（灰头麦鸡 ） -->
+          <div class="modal fade" tabindex="-1" role="dialog" id="myModal09">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="background: rgba(1, 202, 217, .2);color: white;">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" >灰头麦鸡  （鸟纲鸻科麦鸡属）</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">形态特征</label>
+                            <div class="thumbnail-waper">
+                                夏羽头、颈、胸灰色，后颈缀有褐色，多呈淡灰褐色。背、两肩、腰、两翅小覆羽和三级飞羽淡褐色，具金属光泽，腰部两侧、尾上覆羽和尾羽白色。
+                                除最外侧一对尾羽全为白色，最外侧第二对尾羽具黑色羽端外，其余尾羽均具宽阔的黑色亚端斑和窄狭的白色端缘，尤以中央一对尾羽黑色次端斑最为宽阔。
+                                初级覆羽和初级飞羽黑色，内侧初级飞羽内嘲具白色羽缘，中覆羽、大覆羽和次级飞羽白色。 虹膜红色，嘴黄色，尖端黑色，眼前肉垂和脚黄色，爪黑色。
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">栖息环境</label>
+                            <div class="thumbnail-waper">
+                                栖息于平原草地、沼泽、湖畔、河边、水塘以及农田地带，有时也出现在低山丘陵地区溪流两岸的水稻田和湿草地上
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">分布范围</label>
+                            <div class="thumbnail-waper">
+                                分布于欧亚大陆及非洲北部，中南半岛，太平洋诸岛屿。中国繁殖于东北地区以及江苏、福建一带，越冬于广东和云南等地。
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <label for="exampleInputPassword1">生活习性</label>
+                            <div class="thumbnail-waper">
+                                灰头麦鸡常成对或成小群活动。喜欢长时间地站在水边半裸的草地和田埂上休息，或不时双双飞入空中，盘旋一会再落下。飞行速度甚慢，有时还和凤头麦鸡一起活动。
+                                主要啄食甲虫、蝗虫、蚱蜢、鞘翅目和直翅目昆虫，也吃水蛭、螺、蚯蚓、软体动物和植物叶及种子。
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">最近出现</label>
+                            <p class="recent">时间：2024/4/9/ 8:45:22</p>
+                            <p class="recent">地点：1号检测地</p>
+                            <p class="recent">设备：02</p>
+                            <p class="recent">抓拍图</p>
+                            <div class="thumbnail-waper">
+                                <!-- width="300px" height="122px" -->
+                                <img class="img-thumbnail" src="./bird_img/htmj02.jpg" id="preview">
+                            </div>
+                        </div>
+                     
+                      </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
+
+                        </ul>
+                    </div>
+
+                </div>
+                <div class="arightboxbott">
+                    <h2 class="tith2 ">鸟类数量变化</h2>
+                    <div class="lefttoday_tit">
+                        <p class="fl"></p>
+                        <p class="fr"></p>
+                    </div>
+                    <div id="arightboxbott" class="arightboxbottcont"></div>
+                    
+                </div>
+            </div>
+            <!-- mrbox_top_right end -->
+        </div>
+
+    </div>
+    </div>
+
+    <!-- 设备 -->
+    <script type="text/javascript" src="js/shebei3.js"></script>
+    <!-- 近一个月鸟类数量变化 左下角 -->
+    <script type="text/javascript" src="js/vp01_2.js"></script>
+
+    <!--  右侧近一个星期折线图-->
+    <script type="text/javascript" src="js/vp04_2.js"></script>
+
+    <!-- <script type="text/javascript" src="js/moment.min.js"></script> -->
+    <!-- 右侧轮播图 -->
+    <script type="text/javascript" src="js/vp05.js"></script>
+
+    <!-- 新增js -->
+    <script src="./js/echarts.min.js"></script>
+    <!--<script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>-->
+    <!-- 主题 -->
+    <script type="text/javascript" src="./js/plugin/echarts-theme-shine.js"></script>
+    <script type="text/javascript" src="./js/plugin/echarts-theme-macarons.js"></script>
+    <!-- 图表js 包括数据-->
+    <script type="text/javascript" src="./js/data(1).js"></script>
+
+    <script type="text/javascript">
+
+        //中间的动态柱状图
+        //	echarts.init 初始化
+        var myChart = echarts.init(document.getElementById('main'));
+        
+        //生成数据  //自定义初始显示选择个数
+        //data ？？ {[],[{},{},{}],[{},{},{}],{'':0,'':1,'':2}}
+        var data = genData()
+    
+        option = {
+            //标题title
+            title : {
+                text: '近七天鸟类数量统计',
+                x:'center',
+                textStyle:{
+                    color:'#fff',
+					FontFamily:'楷体'
+                }
+            },
+            //图例
+            legend: {
+                type: 'scroll',
+                orient: 'vertical',
+                right: 10,
+                top: 20,
+                bottom: 30,
+                // x: 'right',
+                selected: data.selectedList,
+                //----图例内容样式
+                textStyle:{
+                        //---所有图例的字体颜色						
+                        color:'#fff',			
+                },
+            },
+            //提示框
+            tooltip: {
+                formatter: "{b} : {c}"
+            },
+            grid:{
+            },
+            xAxis: [
+                {
+                    type:'category',
+                    name:'        品种',
+                    //坐标轴标签
+                    axisLabel:{
+                        show:true,
+                        textStyle:{
+                            color:'#fff'
+                        }
+                    },
+                    nameTextStyle:{				//---坐标轴名称样式
+                        color:"#fff",
+                        
+                    },
+                    //坐标轴轴线
+                    axisLine:{
+                        show:true,
+                        //箭头
+                        symbol:['none','arrow'],
+                        symbolSize:[8,8],
+                        symbolOffset:[0,7],	
+    
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type:'value',
+                    name:'数量',
+                    nameTextStyle:{				//---坐标轴名称样式
+                        color:"#fff",
+                    },
+                    axisLabel:{
+                        show:false,
+                        textStyle:{
+                            color:'#fff'
+                        }
+                    },
+                    //坐标轴轴线
+                    axisLine:{
+                        show:true,
+                        //箭头
+                        symbol:['none','arrow'],
+                        symbolSize:[8,8],
+                        symbolOffset:[0,7],	
+    
+                    }
+                }
+            ],
+            //内容数据
+            //series:[{}，{}]
+            series: data.showDataArr,
+            animationEasing: "elasticOut",
+        }
+        //生成数据的方法
+        function genData(count=8) {
+            var nameList = [
+                '赤麻鸭', '灰鹤', '东方白鹳', '白颊黑雁', '八哥', '喜鹊', '灰头麦鸡',  '环颈鸻', '蒙古沙鸻', '鸳鸯', '苍鹭', '大天鹅'
+            ]
+            //放名字 ['赤麻鸭','',''...]
+            var legendData = []
+            //seriesData=[{name:'',value:}.{}.{}]  {name:'赤麻鸭',value:0}
+            var seriesData = []
+            //{'赤麻鸭':0,'':1,'':2,}
+            var selectedList = {}
+            var values=[8,10,12,4,17,11,18,16,9,14,20,18,15,14];
+            for (var i = 0; i < nameList.length ; i++) {
+                name = nameList[i]
+                legendData.push(name)
+                seriesData.push({
+                    name: name,
+                    //每种鸟的数量是100以内的随机数
+                    value: Math.round(Math.random() * 100)
+                    // value:values[i]
+                })
+                selectedList[name] = i < count
+            }
+    
+            //[{},{},{}]
+            var showDataArr=[]
+            //index索引 value每一项
+            $(seriesData).each(function(index,value){
+                //{type:'bar',name:'赤麻鸭',data:[{name:'',value:0}],label:{show:true,position:'top'}}
+                var showDataObj={}
+                showDataObj.type='bar'
+                showDataObj.name=value.name
+                showDataObj.data=[value]
+                showDataObj.label={show: true,position: "top",}
+                showDataArr.push(showDataObj)
+            })
+            return {
+                //[]
+                legendData: legendData,
+                //[{},{},{}]
+                seriesData: seriesData,
+                //[{},{},{}]
+                showDataArr:showDataArr,
+                //{'':0,'':1,'':2}
+                selectedList:selectedList
+            }
+        }
+        //模拟加载
+        myChart.showLoading(
+            {
+                text: 'loading',
+                color: '#37A2DA',
+                textColor: '#37A2DA',
+                zlevel: 0,
+            },
+        )
+        setTimeout(() => {
+            myChart.hideLoading()
+            myChart.setOption(option)
+        }, 1000);
+    </script>
+
+</body>
+
+</html>
