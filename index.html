@@ -44,7 +44,7 @@
                           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                           <h4 class="modal-title" style="color: #fff;">对目标鸟类进行识别</h4>
                         </div>
-						<form action="http://localhost:5000/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+						<form action="http://8.137.159.72:5000/upload" method="post" enctype="multipart/form-data" id="uploadForm">
 						    <div class="modal-body" style="transition: height 0.5s ease;">
 						        <div class="form-group">
 						            <label for="timeInput" style="color: #fff;">时间</label>
@@ -80,7 +80,7 @@
 				    $('#uploadForm').submit(function(event) {
 				        event.preventDefault();
 				        $.ajax({
-				            url: 'http://8.137.159.72/',
+				            url: 'http://8.137.159.72:5000/upload',
 				            type: 'POST',
 				            data: new FormData($('#uploadForm')[0]),
 				            cache: false,
